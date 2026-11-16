@@ -284,6 +284,7 @@ jobs:
           HTTP_PROXY: http://127.0.0.1:9
           HTTPS_PROXY: http://127.0.0.1:9
         run: |
+          trap { Write-Output "::error::Portable CLI test: $($_.Exception.Message)"; throw }
           $env:Path = "$env:SystemRoot\System32;$env:SystemRoot"
           $exe = (Resolve-Path .build-clear-portable/clear.exe).Path
           $test = Join-Path $env:RUNNER_TEMP 'clear-cli-test'
@@ -303,7 +304,7 @@ jobs:
           Push-Location $test
           try {
             & $exe $input $output
-            if ($LASTEXITCODE -ne 0) { throw 'Portable CLI inference failed' }
+            if ($LASTEXITCODE -ne 0) { throw "Portable CLI inference failed with exit code $LASTEXITCODE" }
             $bytes = [IO.File]::ReadAllBytes($output)
             if ($bytes.Length -le 44 -or [Text.Encoding]::ASCII.GetString($bytes, 0, 4) -ne 'RIFF') { throw 'Invalid output WAV' }
             & $exe $input (Join-Path $test 'missing.wav') (Join-Path $test 'missing.tflite')

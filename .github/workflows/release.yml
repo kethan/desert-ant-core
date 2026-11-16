@@ -27,7 +27,12 @@ name: Release
 on:
   push:
     tags: ["v*"]
-  workflow_dispatch: # dry run: builds every publishable artifact, publishes none
+  workflow_dispatch: # dry run; never publishes
+    inputs:
+      clear_only:
+        description: 'Build and test only the Windows Clear Node native'
+        type: boolean
+        default: false
 
 concurrency:
   group: release-${{ github.ref }}
@@ -78,6 +83,7 @@ jobs:
           echo "publish=true" >> "$GITHUB_OUTPUT"
 
   maven:
+    if: github.event_name != 'workflow_dispatch' || inputs.clear_only != true
     name: Maven Central (plugin, core, every model AAR)
     needs: gate
     # Same runner as CI's android job, so the toolchain the release uses is the
@@ -182,6 +188,7 @@ jobs:
 
   # One native core per server-side target. build:node-native-linux runs the Amazon Linux 2 image with `docker run`, because the runner's Node needs glibc 2.28 and can't run inside that image.
   natives:
+    if: github.event_name != 'workflow_dispatch' || inputs.clear_only != true
     name: native ${{ matrix.target }}
     needs: gate
     strategy:

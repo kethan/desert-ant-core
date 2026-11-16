@@ -249,8 +249,10 @@ jobs:
       - name: Build and stage Clear
         shell: pwsh
         run: Tools/windows/build-clear-node.ps1
-      - name: Install workspace dependencies
-        run: npm ci
+      # Only Clear and its local core are needed here. Installing every
+      # workspace also runs Tongue's unrelated POSIX-only prepare script.
+      - name: Install Clear and core dependencies
+        run: npm ci --workspace @desert-ant-labs/core --workspace @desert-ant-labs/clear --no-audit --no-fund
       - name: Test staged native without Swift on PATH
         shell: pwsh
         env:

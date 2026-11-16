@@ -29,3 +29,25 @@ test("a core built before the probe existed is not checked", () => {
 test("other platforms never ask", () => {
   checkLibcurl({ func: () => assert.fail("probed off Linux") }, "pkg", "darwin");
 });
+
+test("Windows preloads a bundled ONNX Runtime before the native core", async () => {
+  const { mkdtempSync, writeFileSync, rmSync } = await import("node:fs");
+  const { tmpdir } = await import("node:os");
+  const path = await import("node:path");
+  const { preloadWindowsOnnx } = await import("../src/native.js");
+  const dir = mkdtempSync(path.join(tmpdir(), "dal-native-"));
+  try {
+    const loaded = [];
+    const koffi = { load: (file) => { loaded.push(file); return {}; } };
+    preloadWindowsOnnx(koffi, dir, "win32"); // Other packages need not bundle it.
+    assert.deepEqual(loaded, []);
+    const dll = path.join(dir, "onnxruntime.dll");
+    writeFileSync(dll, "");
+    preloadWindowsOnnx(koffi, dir, "linux");
+    assert.deepEqual(loaded, []);
+    preloadWindowsOnnx(koffi, dir, "win32");
+    assert.deepEqual(loaded, [dll]);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});

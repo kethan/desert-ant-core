@@ -32,7 +32,7 @@ Everything below is generated from `manifest.json`: the SDK's libraries, then ea
   Copyright © 2005-2020 Rich Felker, et al.
 - **LiteRT.js**, Google. Apache License 2.0. Runs the models in the browser. A peer dependency of the JavaScript packages.
   https://www.npmjs.com/package/@litertjs/core
-- **ONNX Runtime**, Microsoft. MIT License. Runs Voz on Windows, through COnnxRuntime, and in the browser, as onnxruntime-web, a peer dependency.
+- **ONNX Runtime**, Microsoft. MIT License. Runs Voz on Windows, through COnnxRuntime, and in the browser, as onnxruntime-web, a peer dependency. The Windows Clear Node native also links and ships ONNX Runtime.
   https://github.com/microsoft/onnxruntime
   Copyright (c) Microsoft Corporation
 - **koffi**, Niels Martignène. MIT License. Loads the native core in Node.

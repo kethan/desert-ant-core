@@ -31,6 +31,16 @@ function koffiModule() {
 const RUNTIME = { linux: "libLiteRt.so", darwin: "libLiteRt.dylib", win32: "libLiteRt.dll" };
 const coreFile = (name) => ({ linux: `lib${name}.so`, darwin: `lib${name}.dylib`, win32: `${name}.dll` });
 
+// Windows ML can install an older onnxruntime.dll in System32, which Windows
+// searches before the package directory. Preload the exact runtime shipped with
+// the core so its imports resolve to that version. Keep its handle alive.
+const windowsRuntimeHandles = [];
+export function preloadWindowsOnnx(koffi, dir, platform = process.platform) {
+  if (platform !== "win32") return;
+  const runtime = path.join(dir, "onnxruntime.dll");
+  if (fs.existsSync(runtime)) windowsRuntimeHandles.push(koffi.load(runtime));
+}
+
 // The Linux core opens the system libcurl itself (Tools/curlcompat) rather
 // than linking it, so a host without one still loads the library and would
 // only fail at the first download or license request, as an abort. Asked right
@@ -238,6 +248,7 @@ export function loadNative({ here, packageName, coreName, modelId, symbols, targ
     const koffi = koffiModule();
     const dir = nativeDir();
     checkCpuTopology(dir);
+    preloadWindowsOnnx(koffi, dir);
     // Load the LiteRT runtime first so the core's DT_NEEDED resolves in-process.
     const runtime = RUNTIME[process.platform];
     if (runtime && fs.existsSync(path.join(dir, runtime))) koffi.load(path.join(dir, runtime));

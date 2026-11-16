@@ -332,7 +332,7 @@ jobs:
               [ -d "$dir/native/$target" ] || { echo "::error::$dir is missing the $target native"; exit 1; }
             done
           done
-          for file in ClearNode.dll libLiteRt.dll; do
+          for file in ClearNode.dll libLiteRt.dll onnxruntime.dll; do
             [ -f "packages/clear-node/native/win32-x64/$file" ] || { echo "::error::Clear is missing $file"; exit 1; }
           done
 

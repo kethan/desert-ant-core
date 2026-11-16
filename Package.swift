@@ -22,6 +22,7 @@ import Foundation
 // which is why it stays gitignored -- switching modes just re-resolves.
 
 let wasmBuild = ProcessInfo.processInfo.environment["DAL_WASM_BUILD"] != nil
+let clearCLIBuild = ProcessInfo.processInfo.environment["DAL_CLEAR_CLI_BUILD"] == "1"
 let noJavaScriptKit = !wasmBuild
     || ProcessInfo.processInfo.environment["SWIFT_ANDROID_STATIC_BUILD"] != nil
 
@@ -702,7 +703,8 @@ let package = Package(
     // macOS 13 for Apple consumers that never enable MLX: no known Apple consumer sits below
     // iOS 17, and Linux/Android/wasm ignore Apple floors entirely.
     platforms: [.iOS(.v17), .macOS(.v14), .tvOS(.v16), .visionOS(.v1)],
-    products: products + modelProducts + tongueProducts + vozProducts,
+    products: products + modelProducts + tongueProducts + vozProducts
+        + (clearCLIBuild ? [.executable(name: "ClearCLI", targets: ["ClearCLI"])] : []),
     traits: [
         .trait(
             name: "MLX",
@@ -718,5 +720,7 @@ let package = Package(
     dependencies: jsDependencies + mlxDependencies + xetDependencies + onnxDependencies + [
         .package(url: "https://github.com/apple/swift-numerics", from: "1.0.0"),
     ],
-    targets: coreTargets
+    targets: coreTargets + (clearCLIBuild
+        ? [.executableTarget(name: "ClearCLI", dependencies: ["Clear"], path: "Tools/windows/clear-cli")]
+        : [])
 )

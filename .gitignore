@@ -76,3 +76,7 @@ DerivedData/
 *.iml
 __pycache__/
 packages/*-kotlin/bin/
+
+# Windows portable Clear CLI build output
+.build-clear-portable/
+.build-clear-node/

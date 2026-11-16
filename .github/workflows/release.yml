@@ -270,6 +270,53 @@ jobs:
           $env:Path = "$env:SystemRoot\System32;$env:SystemRoot"
           & $node --test packages/clear-node/test/clear.test.mjs
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Build portable Clear command line
+        shell: pwsh
+        run: |
+          Tools/windows/build-clear-cli.ps1
+          # The native integration test downloaded this pinned model. Keep it
+          # external to the executable so the portable folder works offline.
+          Copy-Item packages/clear-node/test/.model-cache/clear-studio.tflite .build-clear-portable/
+      - name: Test portable command line with local model
+        shell: pwsh
+        env:
+          DAL_LICENSE_ENDPOINT: http://127.0.0.1:9/api/v1
+          HTTP_PROXY: http://127.0.0.1:9
+          HTTPS_PROXY: http://127.0.0.1:9
+        run: |
+          $env:Path = "$env:SystemRoot\System32;$env:SystemRoot"
+          $exe = (Resolve-Path .build-clear-portable/clear.exe).Path
+          $test = Join-Path $env:RUNNER_TEMP 'clear-cli-test'
+          New-Item -ItemType Directory -Force $test | Out-Null
+          $input = Join-Path $test 'input.wav'
+          $output = Join-Path $test 'output.wav'
+          $w = [IO.BinaryWriter]::new([IO.File]::Create($input))
+          try {
+            $samples = 24000
+            $w.Write([Text.Encoding]::ASCII.GetBytes('RIFF')); $w.Write([uint32](36 + $samples * 2))
+            $w.Write([Text.Encoding]::ASCII.GetBytes('WAVEfmt ')); $w.Write([uint32]16)
+            $w.Write([uint16]1); $w.Write([uint16]1); $w.Write([uint32]48000)
+            $w.Write([uint32]96000); $w.Write([uint16]2); $w.Write([uint16]16)
+            $w.Write([Text.Encoding]::ASCII.GetBytes('data')); $w.Write([uint32]($samples * 2))
+            for ($i = 0; $i -lt $samples; $i++) { $w.Write([int16](6000 * [Math]::Sin(2 * [Math]::PI * 220 * $i / 48000))) }
+          } finally { $w.Dispose() }
+          Push-Location $test
+          try {
+            & $exe $input $output
+            if ($LASTEXITCODE -ne 0) { throw 'Portable CLI inference failed' }
+            $bytes = [IO.File]::ReadAllBytes($output)
+            if ($bytes.Length -le 44 -or [Text.Encoding]::ASCII.GetString($bytes, 0, 4) -ne 'RIFF') { throw 'Invalid output WAV' }
+            & $exe $input (Join-Path $test 'missing.wav') (Join-Path $test 'missing.tflite')
+            if ($LASTEXITCODE -eq 0) { throw 'Missing model must fail' }
+            if (Test-Path (Join-Path $test 'missing.wav')) { throw 'Missing model produced output' }
+          } finally { Pop-Location }
+      - uses: actions/upload-artifact@v7
+        with:
+          name: clear-windows-portable
+          path: .build-clear-portable/
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 1
       - uses: actions/upload-artifact@v7
         with:
           name: clear-windows-native

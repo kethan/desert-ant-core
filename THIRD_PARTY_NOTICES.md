@@ -14,12 +14,14 @@ Everything below is generated from `manifest.json`: the SDK's libraries, then ea
 <!-- notices:start -->
 ## SDK libraries
 
-- **LiteRT**, Google. Apache License 2.0. Runs the models off Apple platforms. Its C headers are in `Sources/CLiteRt`. `libLiteRt.so` ships in the Android library, with its GPU accelerator, and in the Linux Node packages.
+- **LiteRT**, Google. Apache License 2.0. Runs the models off Apple platforms. Its C headers are in `Sources/CLiteRt`. `libLiteRt.so` ships in the Android library, with its GPU accelerator, and in the Linux Node packages. Clear's Windows Node package ships `libLiteRt.dll`.
   https://github.com/google-ai-edge/LiteRT
   Copyright 2024 Google LLC
 - **ICU**, Unicode, Inc. and others. Unicode License v3. Statically linked with Foundation, through swift-foundation-icu, into the Linux Node packages and the WebAssembly builds.
   https://github.com/unicode-org/icu
   Copyright © 2016 and later Unicode, Inc. and others
+- **Swift runtime**, Swift project contributors. Apache License 2.0. Runtime libraries ship with Clear's Windows Node native. Swift's license includes a runtime library exception; see the source for its terms.
+  https://github.com/swiftlang/swift/blob/main/LICENSE.txt
 - **swift-numerics**, Apple. Apache License 2.0. Math functions (`RealModule`), compiled into every build.
   https://github.com/apple/swift-numerics
 - **JavaScriptKit**, Yuta Saito and contributors. MIT License. Compiled into the WebAssembly builds.

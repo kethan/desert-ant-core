@@ -95,6 +95,8 @@ Clear(context).use { clear ->
 
 ### JavaScript
 
+The Node `/native` entry includes a Windows x64 prebuilt core, as well as Linux x64/arm64 and macOS arm64.
+
 ```ts
 import { Clear } from "@desert-ant-labs/clear";       // browser
 // import { Clear } from "@desert-ant-labs/clear/native"; // server-side Node

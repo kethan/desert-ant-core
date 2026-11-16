@@ -40,6 +40,7 @@ export function createNativeSdk(options: {
   packageName: string;
   modelId: string;
   coreName: string;
+  targets?: string[];
 }): import("./index.js").ModelSdk;
 
 export interface CallGroups {

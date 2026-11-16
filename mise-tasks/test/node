@@ -47,9 +47,9 @@ for model in $(dal_select "${usage_model:-all}" node); do
         ( cd "$dir" && npm test ${npm_args[@]+"${npm_args[@]}"} )
         continue
     fi
-    # build:node-native has no Windows lane, so there is nothing to point the
-    # reader at here: the suite cannot run and that is not a setup mistake.
-    if [ "$(dal_host_os)" = windows ] && [ ! -d "$dir/native/$key" ]; then
+    # Only Clear currently has a Windows native; skip the other packages.
+    # A missing Clear build is a setup error, just as it is on other hosts.
+    if [ "$(dal_host_os)" = windows ] && [ "$model" != clear ] && [ ! -d "$dir/native/$key" ]; then
         echo "== $model: skipped, the package ships no $key native core =="
         continue
     fi

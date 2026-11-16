@@ -35,15 +35,14 @@ dal_require_swift_packages
 #     on Ubuntu 20.04 because that libcurl's OpenSSL 1.1 binds to the OpenSSL 3
 #     Node exports. The file says more; the check after the ceilings guards it.
 
-# No Windows lane: the npm packages ship natives for linux-x64, linux-arm64 and
-# darwin-arm64 (the three js/src/native.js names), and nothing consumes a
-# win32-x64 core today. Not a toolchain limit - `swift build --product
-# <Product>Node` does produce <Product>Node.dll on a Windows host, which
-# js/src/native.js already knows how to name - but shipping it is a packaging
-# decision, so this skips rather than staging an artifact no package declares.
+# Windows currently ships only Clear. The PowerShell builder stages its Swift
+# runtime dependencies as well as LiteRT, and requires MSVC developer tools.
 if [ "$(dal_host_os)" = windows ]; then
-    echo "skip: the npm packages ship no win32-x64 native core"
-    exit 0
+    case "${usage_model:-all}" in
+        all|clear) powershell.exe -NoProfile -File Tools/windows/build-clear-node.ps1 ;;
+        *) echo "error: only Clear has a Windows Node native build" >&2; exit 1 ;;
+    esac
+    exit $?
 fi
 
 dal_vendor_litert

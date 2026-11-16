@@ -310,6 +310,9 @@ jobs:
             & $exe $input (Join-Path $test 'missing.wav') (Join-Path $test 'missing.tflite')
             if ($LASTEXITCODE -eq 0) { throw 'Missing model must fail' }
             if (Test-Path (Join-Path $test 'missing.wav')) { throw 'Missing model produced output' }
+            # The nonzero exit was expected; the runner otherwise propagates
+            # LASTEXITCODE at the end of the PowerShell step and fails it.
+            $global:LASTEXITCODE = 0
           } finally { Pop-Location }
       - uses: actions/upload-artifact@v7
         with:

@@ -28,7 +28,7 @@ function koffiModule() {
 
 // LiteRT is model-agnostic. The Swift native library name is supplied by each
 // model package and all libraries expose the same ABI.
-const RUNTIME = { linux: "libLiteRt.so", darwin: "libLiteRt.dylib", win32: "LiteRt.dll" };
+const RUNTIME = { linux: "libLiteRt.so", darwin: "libLiteRt.dylib", win32: "libLiteRt.dll" };
 const coreFile = (name) => ({ linux: `lib${name}.so`, darwin: `lib${name}.dylib`, win32: `${name}.dll` });
 
 // The Linux core opens the system libcurl itself (Tools/curlcompat) rather

@@ -24,6 +24,7 @@ let loadError;
 try {
   clear = await Clear.load({ directory });
 } catch (e) {
+  if (process.env.DAL_TEST_REQUIRE_NATIVE === "1") throw e;
   loadError = e;
 }
 const modelOpts = clear ? {} : { skip: `native model unavailable: ${String(loadError).slice(0, 100)}` };

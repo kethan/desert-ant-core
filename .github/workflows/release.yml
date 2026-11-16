@@ -228,9 +228,49 @@ jobs:
           if-no-files-found: error
           retention-days: 1
 
+  clear-windows-native:
+    name: Clear native win32-x64
+    needs: gate
+    runs-on: windows-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v5
+      - uses: compnerd/gha-setup-swift@v0.4.0
+        with:
+          branch: swift-6.2.1-release
+          tag: 6.2.1-RELEASE
+      - uses: ilammy/msvc-dev-cmd@v1
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Build and stage Clear
+        shell: pwsh
+        run: Tools/windows/build-clear-node.ps1
+      - name: Install workspace dependencies
+        run: npm ci
+      - name: Test staged native without Swift on PATH
+        shell: pwsh
+        env:
+          DAL_LICENSE_ENDPOINT: http://127.0.0.1:9/api/v1
+          DAL_TEST_REQUIRE_NATIVE: '1'
+        run: |
+          $node = (Get-Command node).Source
+          $env:Path = "$env:SystemRoot\System32;$env:SystemRoot"
+          & $node --test packages/clear-node/test/clear.test.mjs
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - uses: actions/upload-artifact@v7
+        with:
+          name: clear-windows-native
+          path: packages/clear-node/native/win32-x64/
+          if-no-files-found: error
+          retention-days: 1
+
   npm:
     name: npm (core and every model package)
-    needs: [gate, natives]
+    needs: [gate, natives, clear-windows-native]
     # The larger Linux runner where the repo names one (LINUX_RUNNER, as CI's
     # wasm jobs read it): with Swift 6.4.1 the wasm build of every model wants
     # more than the 4-core hosted runner has, and GitHub loses the runner after
@@ -269,6 +309,10 @@ jobs:
           pattern: natives-*
           path: /tmp/natives
           merge-multiple: true
+      - uses: actions/download-artifact@v8
+        with:
+          name: clear-windows-native
+          path: packages/clear-node/native/win32-x64
       - name: Stage the natives
         run: |
           set -euo pipefail
@@ -287,6 +331,9 @@ jobs:
             for target in linux-x64 linux-arm64 darwin-arm64; do
               [ -d "$dir/native/$target" ] || { echo "::error::$dir is missing the $target native"; exit 1; }
             done
+          done
+          for file in ClearNode.dll libLiteRt.dll; do
+            [ -f "packages/clear-node/native/win32-x64/$file" ] || { echo "::error::Clear is missing $file"; exit 1; }
           done
 
       # The browser half of every package.

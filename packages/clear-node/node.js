@@ -17,4 +17,5 @@ export const Clear = makeClear(createNativeSdk({
   packageName: PACKAGE_NAME,
   modelId: MODEL_ID,
   coreName: "ClearNode",
+  targets: ["linux-x64", "linux-arm64", "darwin-arm64", "win32-x64"],
 }));

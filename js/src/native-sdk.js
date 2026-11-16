@@ -66,14 +66,15 @@ function bridgeHostIdentity() {
  * @param {string} o.packageName consumer package (for error messages)
  * @param {string} o.modelId catalog id, e.g. "emo"
  * @param {string} o.coreName the package's native library base name (e.g. "EmoNode")
+ * @param {string[]} [o.targets] supported target keys for the error hint
  */
-export function createNativeSdk({ here, packageName, modelId, coreName }) {
+export function createNativeSdk({ here, packageName, modelId, coreName, targets }) {
   // The prebuilt native for this host lives in native/<platform>-<arch>/ next to
   // the package's node.js (built by `mise run build:node-native`): the self-contained
   // model-specific Swift library plus the LiteRT runtime it links. The ABI is
   // the same for every model apart from the `<modelId>_create` constructor, so
   // no symbol is named here.
-  const native = loadNative({ here, packageName, coreName, modelId });
+  const native = loadNative({ here, packageName, coreName, modelId, targets });
   const { lib, callAsync, decodeResult, withCallGroup } = native;
 
   const isDownloaded = (handle) => lib.isDownloaded(handle) !== 0;

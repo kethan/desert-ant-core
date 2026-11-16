@@ -21,7 +21,7 @@ Two entries share one `Clear` API:
   in the browser; calling it in plain Node throws an actionable error pointing
   you to `/native`.
 - **`@desert-ant-labs/clear/native`**: a prebuilt native core (LiteRT on Linux,
-  Core ML on macOS), for **server-side inference** in Node. No `@litertjs/core`,
+  Core ML on macOS, LiteRT on Windows x64), for **server-side inference** in Node. No `@litertjs/core`,
   no build tools, no flags. Import it from server-only code (API routes, server
   actions, plain Node scripts). Do not import it from a component that also
   renders in the browser.

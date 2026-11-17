@@ -5,7 +5,7 @@ $dest = '.build-enhance-portable'
 $native = 'packages/clear-node/native/win32-x64'
 $model = 'packages/clear-node/test/.model-cache/clear-studio.tflite'
 foreach ($file in @("$native/ClearNode.dll", $model, 'node_modules/koffi/build/koffi/win32_x64/koffi.node')) {
-    if (-not (Test-Path $file)) { throw "Missing $file: build and test the Clear Node native first" }
+    if (-not (Test-Path $file)) { throw "Missing ${file}: build and test the Clear Node native first" }
 }
 Remove-Item -Recurse -Force $dest -ErrorAction SilentlyContinue
 $core = "$dest/node_modules/@desert-ant-labs/core"

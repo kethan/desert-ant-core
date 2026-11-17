@@ -270,6 +270,57 @@ jobs:
           $env:Path = "$env:SystemRoot\System32;$env:SystemRoot"
           & $node --test packages/clear-node/test/clear.test.mjs
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      # The portable enhancer is a manual, Windows-only build, separate from
+      # the npm release. It bundles GPL FFmpeg as a separate executable.
+      - name: Build portable Windows enhancer
+        if: github.event_name == 'workflow_dispatch' && inputs.clear_only == true
+        shell: pwsh
+        run: Tools/windows/build-enhance-portable.ps1
+      - name: Test portable enhancer without installed Node, FFmpeg or model downloads
+        if: github.event_name == 'workflow_dispatch' && inputs.clear_only == true
+        shell: pwsh
+        env:
+          DAL_LICENSE_ENDPOINT: http://127.0.0.1:9/api/v1
+          HTTP_PROXY: http://127.0.0.1:9
+          HTTPS_PROXY: http://127.0.0.1:9
+        run: |
+          $bundle = (Resolve-Path .build-enhance-portable).Path
+          $work = Join-Path $env:RUNNER_TEMP 'enhancer-test'
+          New-Item -ItemType Directory -Force $work | Out-Null
+          $inputFile = Join-Path $work 'input.wav'
+          $outputFile = Join-Path $work 'input-cleaned.wav'
+          $w = [IO.BinaryWriter]::new([IO.File]::Create($inputFile))
+          try {
+            $samples = 48000
+            $w.Write([Text.Encoding]::ASCII.GetBytes('RIFF')); $w.Write([uint32](36 + $samples * 2))
+            $w.Write([Text.Encoding]::ASCII.GetBytes('WAVEfmt ')); $w.Write([uint32]16)
+            $w.Write([uint16]1); $w.Write([uint16]1); $w.Write([uint32]48000)
+            $w.Write([uint32]96000); $w.Write([uint16]2); $w.Write([uint16]16)
+            $w.Write([Text.Encoding]::ASCII.GetBytes('data')); $w.Write([uint32]($samples * 2))
+            for ($i = 0; $i -lt $samples; $i++) { $w.Write([int16](6000 * [Math]::Sin(2 * [Math]::PI * 220 * $i / 48000))) }
+          } finally { $w.Dispose() }
+          $env:Path = "$env:SystemRoot\System32;$env:SystemRoot"
+          Push-Location $bundle
+          try {
+            # No command arguments: exercise the interactive prompt and local model.
+            $inputFile | & .\node.exe .\enhance.js
+            if ($LASTEXITCODE -ne 0) { throw "Portable enhancer failed: $LASTEXITCODE" }
+            $bytes = [IO.File]::ReadAllBytes($outputFile)
+            if ($bytes.Length -le 44 -or [Text.Encoding]::ASCII.GetString($bytes, 0, 4) -ne 'RIFF') { throw 'Invalid output WAV' }
+            # Exercise the optional MP3 path and a non-default sample rate too.
+            & .\node.exe .\enhance.js $inputFile --test --format=mp3 --sample-rate=44100
+            if ($LASTEXITCODE -ne 0) { throw "Portable MP3 enhancer failed: $LASTEXITCODE" }
+            $mp3 = Join-Path $work 'input-test-cleaned.mp3'
+            if (-not (Test-Path $mp3) -or (Get-Item $mp3).Length -le 0) { throw 'Missing output MP3' }
+          } finally { Pop-Location }
+      - uses: actions/upload-artifact@v7
+        if: github.event_name == 'workflow_dispatch' && inputs.clear_only == true
+        with:
+          name: clear-enhance-windows-portable
+          path: .build-enhance-portable/
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 1
       - uses: actions/upload-artifact@v7
         with:
           name: clear-windows-native

@@ -425,6 +425,7 @@ function licenseText(id, root) {
 /// needs a name here too; check:manifest fails without one.
 export const LICENSE_NAMES = {
   "Apache-2.0": "Apache License 2.0",
+  "GPL-3.0-or-later": "GNU General Public License v3.0 or later",
   "CC-BY-2.0": "CC BY 2.0",
   "CC-BY-2.0-FR": "CC BY 2.0 France",
   "CC-BY-3.0": "CC BY 3.0",

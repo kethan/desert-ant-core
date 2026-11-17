@@ -275,7 +275,13 @@ jobs:
       - name: Build portable Windows enhancer
         if: github.event_name == 'workflow_dispatch' && inputs.clear_only == true
         shell: pwsh
-        run: Tools/windows/build-enhance-portable.ps1
+        run: |
+          try { Tools/windows/build-enhance-portable.ps1 }
+          catch {
+            $message = "$($_.Exception.Message) at $($_.InvocationInfo.PositionMessage)" -replace '[\r\n]+', ' '
+            Write-Host "::error::$message"
+            exit 1
+          }
       - name: Test portable enhancer without installed Node, FFmpeg or model downloads
         if: github.event_name == 'workflow_dispatch' && inputs.clear_only == true
         shell: pwsh
